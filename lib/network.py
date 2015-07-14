@@ -499,7 +499,7 @@ class Network(util.DaemonThread):
             return False
 
         self.unanswered_requests[_id] = request
-        self.interface.send_request(request)
+        self.interface.queue_request(request)
         return True
 
     def connection_down(self, server):
