@@ -7,11 +7,9 @@ Electrum - lightweight MonetaryUnit client
   Author: Thomas Voegtlin
   Language: Python
   Homepage: https://electrum.org/
+  Adapted for MonetaryUnit
+  http://www.monetaryunit.org
 
-
-.. image:: https://travis-ci.org/spesmilo/electrum.svg?branch=master
-    :target: https://travis-ci.org/spesmilo/electrum
-    :alt: Build Status
 
 
 1. GETTING STARTED
