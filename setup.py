@@ -61,10 +61,10 @@ setup(
     },
     scripts=['electrum'],
     data_files=data_files,
-    description="Lightweight Bitcoin Wallet",
-    author="Thomas Voegtlin",
-    author_email="thomasv@electrum.org",
+    description="Lightweight MonetaryUnit Wallet",
+    author="upgradeadvice",
+    author_email="upgradeadvice@gmail.com",
     license="GNU GPLv3",
-    url="https://electrum.org",
-    long_description="""Lightweight Bitcoin Wallet"""
+    url="http://MonetaryUnit.org",
+    long_description="""Lightweight MonetaryUnit Wallet"""
 )

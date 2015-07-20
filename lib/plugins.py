@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Electrum - lightweight Bitcoin client
+# Electrum - lightweight MonetaryUnit client
 # Copyright (C) 2015 Thomas Voegtlin
 #
 # This program is free software: you can redistribute it and/or modify

@@ -18,25 +18,25 @@ from electrum_gui.qt.util import *
 from electrum_gui.qt.amountedit import AmountEdit
 
 
-EXCHANGES = ["BitcoinAverage",
-             "BitcoinVenezuela",
-             "BTCParalelo",
+EXCHANGES = ["MonetaryUnitAverage",
+             "MonetaryUnitVenezuela",
+             "MUEParalelo",
              "Bitcurex",
              "Bitmarket",
              "BitPay",
              "Blockchain",
-             "BTCChina",
+             "MUEChina",
              "CaVirtEx",
              "Coinbase",
              "CoinDesk",
              "itBit",
-             "LocalBitcoins",
+             "LocalMonetaryUnits",
              "Winkdex"]
 
 EXCH_SUPPORT_HIST = [("CoinDesk", "USD"),
                      ("Winkdex", "USD"),
-                     ("BitcoinVenezuela", "ARS"),
-                     ("BitcoinVenezuela", "VEF")]
+                     ("MonetaryUnitVenezuela", "ARS"),
+                     ("MonetaryUnitVenezuela", "VEF")]
 
 class Exchanger(threading.Thread):
 
@@ -72,19 +72,19 @@ class Exchanger(threading.Thread):
     def update_rate(self):
         self.use_exchange = self.parent.config.get('use_exchange', "Blockchain")
         update_rates = {
-            "BitcoinAverage": self.update_ba,
-            "BitcoinVenezuela": self.update_bv,
-            "BTCParalelo": self.update_bpl,
+            "MonetaryUnitAverage": self.update_ba,
+            "MonetaryUnitVenezuela": self.update_bv,
+            "MUEParalelo": self.update_bpl,
             "Bitcurex": self.update_bx,
             "Bitmarket": self.update_bm,
             "BitPay": self.update_bp,
             "Blockchain": self.update_bc,
-            "BTCChina": self.update_CNY,
+            "MUEChina": self.update_CNY,
             "CaVirtEx": self.update_cv,
             "CoinDesk": self.update_cd,
             "Coinbase": self.update_cb,
             "itBit": self.update_ib,
-            "LocalBitcoins": self.update_lb,
+            "LocalMonetaryUnits": self.update_lb,
             "Winkdex": self.update_wd,
         }
         try:
@@ -136,7 +136,7 @@ class Exchanger(threading.Thread):
         return {"CAD": Decimal(str(cadprice))}
 
     def update_bm(self):
-        jsonresp = self.get_json('www.bitmarket.pl', "/json/BTCPLN/ticker.json")
+        jsonresp = self.get_json('www.bitmarket.pl', "/json/MUEPLN/ticker.json")
         pln_price = jsonresp["last"]
         return {"PLN": Decimal(str(pln_price))}
 
@@ -168,7 +168,7 @@ class Exchanger(threading.Thread):
 
     def update_bv(self):
         jsonresp = self.get_json('api.bitcoinvenezuela.com', "/")
-        return dict([(r, Decimal(jsonresp["BTC"][r])) for r in jsonresp["BTC"]])
+        return dict([(r, Decimal(jsonresp["MUE"][r])) for r in jsonresp["MUE"]])
 
     def update_bpl(self):
         jsonresp = self.get_json('btcparalelo.com', "/api/price")
@@ -224,7 +224,7 @@ class Plugin(BasePlugin):
         r[0] = self.create_fiat_balance_text(Decimal(btc_balance) / COIN)
 
     def get_fiat_price_text(self, r):
-        # return BTC price as: 123.45 USD
+        # return MUE price as: 123.45 USD
         r[0] = self.create_fiat_balance_text(1)
         quote = r[0]
         if quote:
@@ -232,13 +232,13 @@ class Plugin(BasePlugin):
 
     @hook
     def get_fiat_status_text(self, btc_balance, r2):
-        # return status as:   (1.23 USD)    1 BTC~123.45 USD
+        # return status as:   (1.23 USD)    1 MUE~123.45 USD
         text = ""
         r = {}
         self.get_fiat_price_text(r)
         quote = r.get(0)
         if quote:
-            price_text = "1 BTC~%s"%quote
+            price_text = "1 MUE~%s"%quote
             fiat_currency = quote[-3:]
             btc_price = self.btc_rate
             fiat_balance = Decimal(btc_price) * Decimal(btc_balance) / COIN
@@ -298,16 +298,16 @@ class Plugin(BasePlugin):
                 self.resp_hist = self.exchanger.get_json('winkdex.com', "/api/v0/series?start_time=1342915200")['series'][0]['results']
             except Exception:
                 return
-        elif self.cur_exchange == "BitcoinVenezuela":
+        elif self.cur_exchange == "MonetaryUnitVenezuela":
             cur_currency = self.fiat_unit()
             if cur_currency == "VEF":
                 try:
-                    self.resp_hist = self.exchanger.get_json('api.bitcoinvenezuela.com', "/historical/index.php?coin=BTC")['VEF_BTC']
+                    self.resp_hist = self.exchanger.get_json('api.bitcoinvenezuela.com', "/historical/index.php?coin=MUE")['VEF_MUE']
                 except Exception:
                     return
             elif cur_currency == "ARS":
                 try:
-                    self.resp_hist = self.exchanger.get_json('api.bitcoinvenezuela.com', "/historical/index.php?coin=BTC")['ARS_BTC']
+                    self.resp_hist = self.exchanger.get_json('api.bitcoinvenezuela.com', "/historical/index.php?coin=MUE")['ARS_MUE']
                 except Exception:
                     return
             else:
@@ -355,7 +355,7 @@ class Plugin(BasePlugin):
                     tx_fiat_val = "%.2f %s" % (self.btc_rate * Decimal(tx_info['value'])/COIN , "USD")
                 except KeyError:
                     tx_fiat_val = _("No data")
-            elif self.cur_exchange == "BitcoinVenezuela":
+            elif self.cur_exchange == "MonetaryUnitVenezuela":
                 tx_time_str = datetime.datetime.fromtimestamp(tx_time).strftime('%Y-%m-%d')
                 try:
                     num = self.resp_hist[tx_time_str].replace(',','')
@@ -440,7 +440,7 @@ class Plugin(BasePlugin):
 
         def set_hist_check(hist_checkbox):
             cur_exchange = self.config.get('use_exchange', "Blockchain")
-            hist_checkbox.setEnabled(cur_exchange in ["CoinDesk", "Winkdex", "BitcoinVenezuela"])
+            hist_checkbox.setEnabled(cur_exchange in ["CoinDesk", "Winkdex", "MonetaryUnitVenezuela"])
 
         def set_currencies(combo):
             try:

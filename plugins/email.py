@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Electrum - Lightweight Bitcoin Client
+# Electrum - Lightweight MonetaryUnit Client
 # Copyright (C) 2015 Thomas Voegtlin
 #
 # This program is free software: you can redistribute it and/or modify
@@ -73,7 +73,7 @@ class Processor(threading.Thread):
                 p = [p]
                 continue
             for item in p:
-                if item.get_content_type() == "application/bitcoin-paymentrequest":
+                if item.get_content_type() == "application/monetaryunit-paymentrequest":
                     pr_str = item.get_payload()
                     pr_str = base64.b64decode(pr_str)
                     self.on_receive(pr_str)
@@ -92,10 +92,10 @@ class Processor(threading.Thread):
         msg['Subject'] = message
         msg['To'] = recipient
         msg['From'] = self.username
-        part = MIMEBase('application', "bitcoin-paymentrequest")
+        part = MIMEBase('application', "monetaryunit-paymentrequest")
         part.set_payload(payment_request)
         Encoders.encode_base64(part)
-        part.add_header('Content-Disposition', 'attachment; filename="payreq.btc"')
+        part.add_header('Content-Disposition', 'attachment; filename="payreq.mue"')
         msg.attach(part)
         s = smtplib.SMTP_SSL(self.imap_server, timeout=2)
         s.login(self.username, self.password)
@@ -201,7 +201,7 @@ class Plugin(BasePlugin):
         vbox.addStretch()
         vbox.addLayout(Buttons(CloseButton(d), OkButton(d)))
 
-        if not d.exec_(): 
+        if not d.exec_():
             return
 
         server = str(server_e.text())
@@ -212,5 +212,3 @@ class Plugin(BasePlugin):
 
         password = str(password_e.text())
         self.config.set_key('email_password', password)
-
-

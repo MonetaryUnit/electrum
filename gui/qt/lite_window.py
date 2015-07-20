@@ -138,9 +138,9 @@ class MiniWindow(QDialog):
         self.balance_label.setObjectName("balance_label")
 
 
-        # Bitcoin address code
+        # MonetaryUnit address code
         self.address_input = QLineEdit()
-        self.address_input.setPlaceholderText(_("Enter a Bitcoin address or contact"))
+        self.address_input.setPlaceholderText(_("Enter a MonetaryUnit address or contact"))
         self.address_input.setObjectName("address_input")
 
         self.address_input.setFocusPolicy(Qt.ClickFocus)
@@ -358,7 +358,7 @@ class MiniWindow(QDialog):
         self.amount_input_changed(self.amount_input.text())
 
     def set_balances(self, btc_balance):
-        """Set the bitcoin balance and update the amount label accordingly."""
+        """Set the monetaryunit balance and update the amount label accordingly."""
         self.btc_balance = btc_balance
         quote_text = self.create_quote_text(btc_balance)
         if quote_text:
@@ -371,7 +371,7 @@ class MiniWindow(QDialog):
         self.setWindowTitle("Electrum %s - %s %s" % (electrum_version, amount, unit))
 
     def amount_input_changed(self, amount_text):
-        """Update the number of bitcoins displayed."""
+        """Update the number of monetaryunits displayed."""
         self.check_button_status()
 
         try:
@@ -388,7 +388,7 @@ class MiniWindow(QDialog):
 
     def create_quote_text(self, btc_balance):
         """Return a string copy of the amount fiat currency the
-        user has in bitcoins."""
+        user has in monetaryunits."""
         from electrum.plugins import run_hook
         r = {}
         run_hook('get_fiat_balance_text', btc_balance, r)
@@ -401,7 +401,7 @@ class MiniWindow(QDialog):
             self.amount_input.setText("")
 
     def check_button_status(self):
-        """Check that the bitcoin address is valid and that something
+        """Check that the monetaryunit address is valid and that something
         is entered in the amount before making the send button clickable."""
         try:
             value = D(str(self.amount_input.text())) * (10**self.actuator.g.decimal_point)
@@ -460,7 +460,7 @@ class MiniWindow(QDialog):
 
 
     def the_website(self):
-        webbrowser.open("http://electrum.org")
+        webbrowser.open("http://monetaryunit.org")
 
 
     def toggle_receiving_layout(self, toggle_state):
@@ -505,7 +505,7 @@ class BalanceLabel(QLabel):
 
 
     def set_balance_text(self, amount, unit, quote_text):
-        """Set the amount of bitcoins in the gui."""
+        """Set the amount of monetaryunits in the gui."""
         if self.state == self.SHOW_CONNECTING:
             self.state = self.SHOW_BALANCE
 
@@ -576,7 +576,7 @@ class ReceivePopup(QDialog):
         self.close()
 
     def setup(self, address):
-        label = QLabel(_("Copied your Bitcoin address to the clipboard!"))
+        label = QLabel(_("Copied your MonetaryUnit address to the clipboard!"))
         address_display = QLineEdit(address)
         address_display.setReadOnly(True)
         resize_line_edit_width(address_display, address)
@@ -586,7 +586,7 @@ class ReceivePopup(QDialog):
         main_layout.addWidget(address_display)
 
         self.setMouseTracking(True)
-        self.setWindowTitle("Electrum - " + _("Receive Bitcoin payment"))
+        self.setWindowTitle("Electrum - " + _("Receive MonetaryUnit payment"))
         self.setWindowFlags(Qt.Window|Qt.FramelessWindowHint|
                             Qt.MSWindowsFixedSizeDialogHint)
         self.layout().setSizeConstraint(QLayout.SetFixedSize)
@@ -603,7 +603,7 @@ class ReceivePopup(QDialog):
 
 class MiniActuator:
     """Initialize the definitions relating to themes and
-    sending/receiving bitcoins."""
+    sending/receiving monetaryunits."""
 
 
     def __init__(self, main_window):
@@ -698,7 +698,7 @@ class MiniActuator:
 
         if dest_address is None or not is_valid(dest_address):
             QMessageBox.warning(parent_window, _('Error'),
-                _('Invalid Bitcoin Address') + ':\n' + address, _('OK'))
+                _('Invalid MonetaryUnit Address') + ':\n' + address, _('OK'))
             return False
 
         amount = D(unicode(amount)) * (10*self.g.decimal_point)
@@ -714,9 +714,9 @@ class MiniActuator:
             password = None
 
         fee = 0
-        # 0.1 BTC = 10000000
+        # 0.1 MUE = 10000000
         if amount < bitcoin(1) / 10:
-            # 0.001 BTC
+            # 0.001 MUE
             fee = bitcoin(1) / 1000
 
         try:
@@ -864,5 +864,3 @@ class MiniDriver(QObject):
     def update_history(self):
         tx_history = self.g.wallet.get_history()
         self.window.update_history(tx_history)
-
-

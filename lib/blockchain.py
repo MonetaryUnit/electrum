@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Electrum - lightweight Bitcoin client
+# Electrum - lightweight MonetaryUnit client
 # Copyright (C) 2012 thomasv@ecdsa.org
 #
 # This program is free software: you can redistribute it and/or modify
@@ -27,7 +27,7 @@ class Blockchain():
     def __init__(self, config, network):
         self.config = config
         self.network = network
-        self.headers_url = 'https://headers.electrum.org/blockchain_headers'
+        self.headers_url = 'https://headers.monetaryunit.org/blockchain_headers'
         self.local_height = 0
         self.set_local_height()
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python2
 # -*- mode: python -*-
 #
-# Electrum - lightweight Bitcoin client
+# Electrum - lightweight MonetaryUnit client
 # Copyright (C) 2011 thomasv@gitorious
 #
 # This program is free software: you can redistribute it and/or modify
@@ -99,9 +99,9 @@ def run_gui(config):
     if url:
         if os.path.exists(url):
             # assume this is a payment request
-            url = "bitcoin:?r=file://"+ os.path.join(os.getcwd(), url)
+            url = "monetaryunit:?r=file://"+ os.path.join(os.getcwd(), url)
 
-        if not re.match('^bitcoin:', url):
+        if not re.match('^monetaryunit:', url):
             print_stderr('unknown command:', url)
             sys.exit(1)
 

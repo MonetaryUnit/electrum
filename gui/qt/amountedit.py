@@ -19,7 +19,7 @@ class AmountEdit(MyLineEdit):
 
     def __init__(self, base_unit, is_int = False, parent=None):
         QLineEdit.__init__(self, parent)
-        # This seems sufficient for hundred-BTC amounts with 8 decimals
+        # This seems sufficient for hundred-MUE amounts with 8 decimals
         self.setFixedWidth(140)
         self.base_unit = base_unit
         self.textChanged.connect(self.numbify)
@@ -69,7 +69,7 @@ class AmountEdit(MyLineEdit):
         return x
 
 
-class BTCAmountEdit(AmountEdit):
+class MUEAmountEdit(AmountEdit):
 
     def __init__(self, decimal_point, is_int = False, parent=None):
         AmountEdit.__init__(self, self._base_unit, is_int, parent)
@@ -79,9 +79,9 @@ class BTCAmountEdit(AmountEdit):
         p = self.decimal_point()
         assert p in [2, 5, 8]
         if p == 8:
-            return 'BTC'
+            return 'MUE'
         if p == 5:
-            return 'mBTC'
+            return 'mMUE'
         if p == 2:
             return 'bits'
         raise Exception('Unknown base unit')

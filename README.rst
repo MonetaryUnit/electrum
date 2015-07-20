@@ -1,4 +1,4 @@
-Electrum - lightweight Bitcoin client
+Electrum - lightweight MonetaryUnit client
 =====================================
 
 ::

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Electrum - lightweight Bitcoin client
+# Electrum - lightweight MonetaryUnit client
 # Copyright (C) 2015 Thomas Voegtlin
 #
 # This program is free software: you can redistribute it and/or modify
@@ -29,11 +29,11 @@ descriptions = [
     },
     {
         'name': 'btchipwallet',
-        'fullname': _('BTChip Wallet'),
-        'description': _('Provides support for BTChip hardware wallet'),
+        'fullname': _('MUEhip Wallet'),
+        'description': _('Provides support for MUEhip hardware wallet'),
         'requires': [('btchip', 'github.com/btchip/btchip-python')],
         'requires_wallet_type': ['btchip'],
-        'registers_wallet_type': ('hardware', 'btchip', _("BTChip wallet")),
+        'registers_wallet_type': ('hardware', 'btchip', _("MUEhip wallet")),
         'available_for': ['qt', 'cmdline'],
     },
     {

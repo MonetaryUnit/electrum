@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Electrum - lightweight Bitcoin client
+# Electrum - lightweight MonetaryUnit client
 # Copyright (C) 2012 thomasv@gitorious
 #
 # This program is free software: you can redistribute it and/or modify
@@ -46,7 +46,7 @@ from electrum import Imported_Wallet
 from electrum import paymentrequest
 from electrum.contacts import Contacts
 
-from amountedit import AmountEdit, BTCAmountEdit, MyLineEdit
+from amountedit import AmountEdit, MUEAmountEdit, MyLineEdit
 from network_dialog import NetworkDialog
 from qrcodewidget import QRCodeWidget, QRDialog
 from qrtextedit import ScanQRTextEdit, ShowQRTextEdit
@@ -427,7 +427,7 @@ class ElectrumWindow(QMainWindow):
 
     def show_about(self):
         QMessageBox.about(self, "Electrum",
-            _("Version")+" %s" % (self.wallet.electrum_version) + "\n\n" + _("Electrum's focus is speed, with low resource usage and simplifying Bitcoin. You do not need to perform regular backups, because your wallet can be recovered from a secret phrase that you can memorize or write on paper. Startup times are instant because it operates in conjunction with high-performance servers that handle the most complicated parts of the Bitcoin system."))
+            _("Version")+" %s" % (self.wallet.electrum_version) + "\n\n" + _("Electrum's focus is speed, with low resource usage and simplifying MonetaryUnit. You do not need to perform regular backups, because your wallet can be recovered from a secret phrase that you can memorize or write on paper. Startup times are instant because it operates in conjunction with high-performance servers that handle the most complicated parts of the MonetaryUnit system."))
 
     def show_report_bug(self):
         QMessageBox.information(self, "Electrum - " + _("Reporting Bugs"),
@@ -511,9 +511,9 @@ class ElectrumWindow(QMainWindow):
         if self.decimal_point == 2:
             return 'bits'
         if self.decimal_point == 5:
-            return 'mBTC'
+            return 'mMUE'
         if self.decimal_point == 8:
-            return 'BTC'
+            return 'MUE'
         raise Exception('Unknown base unit')
 
     def update_status(self):
@@ -601,7 +601,7 @@ class ElectrumWindow(QMainWindow):
         self.receive_address_e = ButtonsLineEdit()
         self.receive_address_e.addCopyButton(self.app)
         self.receive_address_e.setReadOnly(True)
-        msg = _('Bitcoin address where the payment should be received. Note that each payment request uses a different Bitcoin address.')
+        msg = _('MonetaryUnit address where the payment should be received. Note that each payment request uses a different MonetaryUnit address.')
         self.receive_address_label = HelpLabel(_('Receiving address'), msg)
         self.receive_address_e.textChanged.connect(self.update_receive_qr)
         self.receive_address_e.setFocusPolicy(Qt.NoFocus)
@@ -613,7 +613,7 @@ class ElectrumWindow(QMainWindow):
         grid.addWidget(self.receive_message_e, 1, 1, 1, 4)
         self.receive_message_e.textChanged.connect(self.update_receive_qr)
 
-        self.receive_amount_e = BTCAmountEdit(self.get_decimal_point)
+        self.receive_amount_e = MUEAmountEdit(self.get_decimal_point)
         grid.addWidget(QLabel(_('Requested amount')), 2, 0)
         grid.addWidget(self.receive_amount_e, 2, 1, 1, 2)
         self.receive_amount_e.textChanged.connect(self.update_receive_qr)
@@ -621,7 +621,7 @@ class ElectrumWindow(QMainWindow):
         self.expires_combo = QComboBox()
         self.expires_combo.addItems(map(lambda x:x[0], expiration_values))
         self.expires_combo.setCurrentIndex(1)
-        msg = _('Expiration date of your request. This information is not included in the Bitcoin address nor in the QR code; the recipient will see it only if you send them a complete request.')
+        msg = _('Expiration date of your request. This information is not included in the MonetaryUnit address nor in the QR code; the recipient will see it only if you send them a complete request.')
         grid.addWidget(HelpLabel(_('Expires in'), msg), 3, 0)
         grid.addWidget(self.expires_combo, 3, 1)
         self.expires_label = QLineEdit('')
@@ -741,7 +741,7 @@ class ElectrumWindow(QMainWindow):
                     else:
                         return
                 else:
-                    if not self.question(_('This request will not be signed; the Bitcoin address returned by your alias does not belong to your wallet')):
+                    if not self.question(_('This request will not be signed; the MonetaryUnit address returned by your alias does not belong to your wallet')):
                         return
         pr, requestor = paymentrequest.make_request(self.config, req, alias, alias_privkey)
         if requestor:
@@ -769,7 +769,7 @@ class ElectrumWindow(QMainWindow):
         import urllib
         r = self.wallet.receive_requests.get(addr)
         pr = paymentrequest.serialize_request(r).SerializeToString()
-        pr_text = 'bitcoin:?s=' + bitcoin.base_encode(pr, base=58)
+        pr_text = 'monetaryunit:?s=' + bitcoin.base_encode(pr, base=58)
         dialog = QDialog(self)
         dialog.setWindowTitle(_("Signed Request"))
         vbox = QVBoxLayout()
@@ -781,7 +781,7 @@ class ElectrumWindow(QMainWindow):
         l.setWordWrap(True)
         vbox.addWidget(l)
         vbox.addWidget(pr_e)
-        msg = _('Note: This format is experimental and may not be supported by other Bitcoin clients.')
+        msg = _('Note: This format is experimental and may not be supported by other MonetaryUnit clients.')
         vbox.addWidget(QLabel(msg))
         vbox.addLayout(Buttons(CopyCloseButton(pr_e.text, self.app, dialog)))
         dialog.setLayout(vbox)
@@ -930,10 +930,10 @@ class ElectrumWindow(QMainWindow):
         grid.setRowStretch(8, 1)
 
         from paytoedit import PayToEdit
-        self.amount_e = BTCAmountEdit(self.get_decimal_point)
+        self.amount_e = MUEAmountEdit(self.get_decimal_point)
         self.payto_e = PayToEdit(self)
         msg = _('Recipient of the funds.') + '\n\n'\
-              + _('You may enter a Bitcoin address, a label from your list of contacts (a list of completions will be proposed), or an alias (email-like address that forwards to a Bitcoin address)')
+              + _('You may enter a MonetaryUnit address, a label from your list of contacts (a list of completions will be proposed), or an alias (email-like address that forwards to a MonetaryUnit address)')
         payto_label = HelpLabel(_('Pay to'), msg)
         grid.addWidget(payto_label, 1, 0)
         grid.addWidget(self.payto_e, 1, 1, 1, 3)
@@ -966,11 +966,11 @@ class ElectrumWindow(QMainWindow):
         grid.addWidget(amount_label, 4, 0)
         grid.addWidget(self.amount_e, 4, 1, 1, 2)
 
-        msg = _('Bitcoin transactions are in general not free. A transaction fee is paid by the sender of the funds.') + '\n\n'\
+        msg = _('MonetaryUnit transactions are in general not free. A transaction fee is paid by the sender of the funds.') + '\n\n'\
               + _('The amount of fee can be decided freely by the sender. However, transactions with low fees take more time to be processed.') + '\n\n'\
               + _('A suggested fee is automatically added to this field. You may override it. The suggested fee increases with the size of the transaction.')
         self.fee_e_label = HelpLabel(_('Fee'), msg)
-        self.fee_e = BTCAmountEdit(self.get_decimal_point)
+        self.fee_e = MUEAmountEdit(self.get_decimal_point)
         grid.addWidget(self.fee_e_label, 5, 0)
         grid.addWidget(self.fee_e, 5, 1, 1, 2)
 
@@ -1171,10 +1171,10 @@ class ElectrumWindow(QMainWindow):
 
         for _type, addr, amount in outputs:
             if addr is None:
-                QMessageBox.warning(self, _('Error'), _('Bitcoin Address is None'), _('OK'))
+                QMessageBox.warning(self, _('Error'), _('MonetaryUnit Address is None'), _('OK'))
                 return
             if _type == 'address' and not bitcoin.is_address(addr):
-                QMessageBox.warning(self, _('Error'), _('Invalid Bitcoin Address'), _('OK'))
+                QMessageBox.warning(self, _('Error'), _('Invalid MonetaryUnit Address'), _('OK'))
                 return
             if amount is None:
                 QMessageBox.warning(self, _('Error'), _('Invalid Amount'), _('OK'))
@@ -2214,7 +2214,7 @@ class ElectrumWindow(QMainWindow):
         if not data:
             return
         # if the user scanned a bitcoin URI
-        if data.startswith("bitcoin:"):
+        if data.startswith("monetaryunit:"):
             self.pay_from_URI(data)
             return
         # else if the user scanned an offline signed tx
@@ -2575,7 +2575,7 @@ class ElectrumWindow(QMainWindow):
         fee_help = _('Fee per kilobyte of transaction.') + '\n' \
                    + _('Recommended value') + ': ' + self.format_amount(bitcoin.RECOMMENDED_FEE) + ' ' + self.base_unit()
         fee_label = HelpLabel(_('Transaction fee per kb') + ':', fee_help)
-        fee_e = BTCAmountEdit(self.get_decimal_point)
+        fee_e = MUEAmountEdit(self.get_decimal_point)
         fee_e.setAmount(self.wallet.fee_per_kb)
         if not self.config.is_modifiable('fee_per_kb'):
             for w in [fee_e, fee_label]: w.setEnabled(False)
@@ -2629,9 +2629,9 @@ class ElectrumWindow(QMainWindow):
         SSL_key_e.editingFinished.connect(lambda: self.config.set_key('ssl_key', str(SSL_key_e.text())))
         id_widgets.append((SSL_key_label, SSL_key_e))
 
-        units = ['BTC', 'mBTC', 'bits']
+        units = ['MUE', 'mMUE', 'bits']
         msg = _('Base unit of your wallet.')\
-              + '\n1BTC=1000mBTC.\n' \
+              + '\n1MUE=1000mMUE.\n' \
               + _(' These settings affects the fields in the Send tab')+' '
         unit_label = HelpLabel(_('Base unit') + ':', msg)
         unit_combo = QComboBox()
@@ -2641,9 +2641,9 @@ class ElectrumWindow(QMainWindow):
             unit_result = units[unit_combo.currentIndex()]
             if self.base_unit() == unit_result:
                 return
-            if unit_result == 'BTC':
+            if unit_result == 'MUE':
                 self.decimal_point = 8
-            elif unit_result == 'mBTC':
+            elif unit_result == 'mMUE':
                 self.decimal_point = 5
             elif unit_result == 'bits':
                 self.decimal_point = 2

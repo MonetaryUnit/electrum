@@ -24,13 +24,13 @@ try:
     from btchip.btchip import btchip
     from btchip.btchipUtils import compress_public_key,format_transaction, get_regular_input_script
     from btchip.bitcoinTransaction import bitcoinTransaction
-    from btchip.btchipPersoWizard import StartBTChipPersoDialog
+    from btchip.btchipPersoWizard import StartMUEhipPersoDialog
     from btchip.btchipFirmwareWizard import checkFirmware, updateFirmware
-    from btchip.btchipException import BTChipException
-    BTCHIP = True
-    BTCHIP_DEBUG = False
+    from btchip.btchipException import MUEhipException
+    MUEHIP = True
+    MUEHIP_DEBUG = False
 except ImportError:
-    BTCHIP = False
+    MUEHIP = False
 
 class Plugin(BasePlugin):
 
@@ -41,10 +41,10 @@ class Plugin(BasePlugin):
         self.handler = None
 
     def constructor(self, s):
-        return BTChipWallet(s)
+        return MUEhipWallet(s)
 
     def _init(self):
-        return BTCHIP
+        return MUEHIP
 
     def is_available(self):
         if not self._is_available:
@@ -77,7 +77,7 @@ class Plugin(BasePlugin):
         self.wallet = wallet
         self.wallet.plugin = self
         if self.handler is None:
-            self.handler = BTChipCmdLineHandler()
+            self.handler = MUEhipCmdLineHandler()
 
     @hook
     def load_wallet(self, wallet, window):
@@ -85,20 +85,20 @@ class Plugin(BasePlugin):
         self.wallet.plugin = self
         self.window = window
         if self.handler is None:
-            self.handler = BTChipQTHandler(self.window.app)
+            self.handler = MUEhipQTHandler(self.window.app)
         if self.btchip_is_connected():
             if not self.wallet.check_proper_device():
-                QMessageBox.information(self.window, _('Error'), _("This wallet does not match your BTChip device"), _('OK'))
+                QMessageBox.information(self.window, _('Error'), _("This wallet does not match your MUEhip device"), _('OK'))
                 self.wallet.force_watching_only = True
         else:
-            QMessageBox.information(self.window, _('Error'), _("BTChip device not detected.\nContinuing in watching-only mode."), _('OK'))
+            QMessageBox.information(self.window, _('Error'), _("MUEhip device not detected.\nContinuing in watching-only mode."), _('OK'))
             self.wallet.force_watching_only = True
 
     @hook
     def installwizard_restore(self, wizard, storage):
         if storage.get('wallet_type') != 'btchip':
             return
-        wallet = BTChipWallet(storage)
+        wallet = MUEhipWallet(storage)
         try:
             wallet.create_main_account(None)
         except BaseException as e:
@@ -114,7 +114,7 @@ class Plugin(BasePlugin):
         except Exception as e:
             tx.error = str(e)
 
-class BTChipWallet(BIP32_HD_Wallet):
+class MUEhipWallet(BIP32_HD_Wallet):
     wallet_type = 'btchip'
     root_derivation = "m/44'/0'"
 
@@ -161,13 +161,13 @@ class BTChipWallet(BIP32_HD_Wallet):
         return self.force_watching_only
 
     def get_client(self, noPin=False):
-        if not BTCHIP:
+        if not MUEHIP:
             self.give_error('please install github.com/btchip/btchip-python')
 
         aborted = False
         if not self.client or self.client.bad:
             try:   
-                d = getDongle(BTCHIP_DEBUG)
+                d = getDongle(MUEHIP_DEBUG)
                 self.client = btchip(d)
                 self.client.handler = self.plugin.handler                
                 firmware = self.client.getFirmwareVersion()['version'].split(".")
@@ -178,17 +178,17 @@ class BTChipWallet(BIP32_HD_Wallet):
                     except Exception, e:
                         aborted = True
                         raise e
-                    d = getDongle(BTCHIP_DEBUG)
+                    d = getDongle(MUEHIP_DEBUG)
                     self.client = btchip(d)
                 try:
                     self.client.getOperationMode()
-                except BTChipException, e:
+                except MUEhipException, e:
                     if (e.sw == 0x6985):
                         d.close()
-                        dialog = StartBTChipPersoDialog()
+                        dialog = StartMUEhipPersoDialog()
                         dialog.exec_()
                         # Then fetch the reference again  as it was invalidated
-                        d = getDongle(BTCHIP_DEBUG)
+                        d = getDongle(MUEHIP_DEBUG)
                         self.client = btchip(d)
                     else:
                         raise e
@@ -196,9 +196,9 @@ class BTChipWallet(BIP32_HD_Wallet):
                     # Immediately prompts for the PIN
                     remaining_attempts = self.client.getVerifyPinRemainingAttempts()
                     if remaining_attempts <> 1:
-                        msg = "Enter your BTChip PIN - remaining attempts : " + str(remaining_attempts)
+                        msg = "Enter your MUEhip PIN - remaining attempts : " + str(remaining_attempts)
                     else:
-                        msg = "Enter your BTChip PIN - WARNING : LAST ATTEMPT. If the PIN is not correct, the dongle will be wiped."
+                        msg = "Enter your MUEhip PIN - WARNING : LAST ATTEMPT. If the PIN is not correct, the dongle will be wiped."
                     confirmed, p, pin = self.password_dialog(msg)
                     if not confirmed:
                         aborted = True
@@ -206,7 +206,7 @@ class BTChipWallet(BIP32_HD_Wallet):
                     pin = pin.encode()
                     self.client.verifyPin(pin)
 
-            except BTChipException, e:
+            except MUEhipException, e:
                 try:
                     self.client.dongle.close()
                 except:
@@ -224,7 +224,7 @@ class BTChipWallet(BIP32_HD_Wallet):
                     pass
                 self.client = None
                 if not aborted:
-                    raise Exception("Could not connect to your BTChip dongle. Please verify access permissions, PIN, or unplug the dongle and plug it again")
+                    raise Exception("Could not connect to your MUEhip dongle. Please verify access permissions, PIN, or unplug the dongle and plug it again")
                 else:
                     raise e
             self.client.bad = False
@@ -318,9 +318,9 @@ class BTChipWallet(BIP32_HD_Wallet):
                 self.device_checked = False
                 self.get_client(True)
             signature = self.get_client().signMessageSign(pin)
-        except BTChipException, e:
+        except MUEhipException, e:
             if e.sw == 0x6a80:
-                self.give_error("Unfortunately, this message cannot be signed by BTChip. Only alphanumerical messages shorter than 140 characters are supported. Please remove any extra characters (tab, carriage return) and retry.")
+                self.give_error("Unfortunately, this message cannot be signed by MUEhip. Only alphanumerical messages shorter than 140 characters are supported. Please remove any extra characters (tab, carriage return) and retry.")
             else:
                 self.give_error(e, True)
         except Exception, e:
@@ -419,7 +419,7 @@ class BTChipWallet(BIP32_HD_Wallet):
                         pin2 = ""
                         for keycardIndex in range(len(outputData['keycardData'])):
                             msg = "Do not enter your device PIN here !\r\n\r\n" + \
-                                "Your BTChip wants to talk to you and tell you a unique second factor code.\r\n" + \
+                                "Your MUEhip wants to talk to you and tell you a unique second factor code.\r\n" + \
                                 "For this to work, please match the character between stars of the output address using your security card\r\n\r\n" + \
                                 "Output address : "
                             for index in range(len(output)):
@@ -494,8 +494,8 @@ class BTChipWallet(BIP32_HD_Wallet):
     def password_dialog(self, msg=None):
         if not msg:
             msg = _("Do not enter your device PIN here !\r\n\r\n" \
-                    "Your BTChip wants to talk to you and tell you a unique second factor code.\r\n" \
-                    "For this to work, please open a text editor (on a different computer / device if you believe this computer is compromised) and put your cursor into it, unplug your BTChip and plug it back in.\r\n" \
+                    "Your MUEhip wants to talk to you and tell you a unique second factor code.\r\n" \
+                    "For this to work, please open a text editor (on a different computer / device if you believe this computer is compromised) and put your cursor into it, unplug your MUEhip and plug it back in.\r\n" \
                     "It should show itself to your computer as a keyboard and output the second factor along with a summary of the transaction it is signing into the text-editor.\r\n\r\n" \
                     "Check that summary and then enter the second factor code here.\r\n" \
                     "Before clicking OK, re-plug the device once more (unplug it and plug it again if you read the second factor code on the same computer)")
@@ -504,7 +504,7 @@ class BTChipWallet(BIP32_HD_Wallet):
             return False, None, None
         return True, response, response
 
-class BTChipQTHandler:
+class MUEhipQTHandler:
 
     def __init__(self, win):
         self.win = win
@@ -528,7 +528,7 @@ class BTChipQTHandler:
         return self.response
 
     def auth_dialog(self):
-        response = QInputDialog.getText(None, "BTChip Authentication", self.message, QLineEdit.Password)        
+        response = QInputDialog.getText(None, "MUEhip Authentication", self.message, QLineEdit.Password)        
         if not response[1]:
             self.response = None
         else:
@@ -538,7 +538,7 @@ class BTChipQTHandler:
     def message_dialog(self):
         self.d = QDialog()
         self.d.setModal(1)
-        self.d.setWindowTitle('BTChip')
+        self.d.setWindowTitle('MUEhip')
         self.d.setWindowFlags(self.d.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
         l = QLabel(self.message)
         vbox = QVBoxLayout(self.d)
@@ -550,7 +550,7 @@ class BTChipQTHandler:
             self.d.hide()
             self.d = None
 
-class BTChipCmdLineHandler:
+class MUEhipCmdLineHandler:
 
     def stop(self):
         pass

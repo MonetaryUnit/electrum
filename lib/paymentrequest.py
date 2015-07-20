@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Electrum - lightweight Bitcoin client
+# Electrum - lightweight MonetaryUnit client
 # Copyright (C) 2014 Thomas Voegtlin
 #
 # This program is free software: you can redistribute it and/or modify
@@ -38,8 +38,8 @@ import transaction
 import x509
 from util import print_error
 
-REQUEST_HEADERS = {'Accept': 'application/bitcoin-paymentrequest', 'User-Agent': 'Electrum'}
-ACK_HEADERS = {'Content-Type':'application/bitcoin-payment','Accept':'application/bitcoin-paymentack','User-Agent':'Electrum'}
+REQUEST_HEADERS = {'Accept': 'application/monetaryunit-paymentrequest', 'User-Agent': 'Electrum'}
+ACK_HEADERS = {'Content-Type':'application/monetaryunit-payment','Accept':'application/monetaryunit-paymentack','User-Agent':'Electrum'}
 
 ca_path = requests.certs.where()
 ca_list, ca_keyID = x509.load_certificates(ca_path)
@@ -398,7 +398,7 @@ class InvoiceStore(object):
         for k, pr in self.invoices.items():
             l[k] = {
                 'hex': str(pr).encode('hex'),
-                'requestor': pr.get_requestor(), 
+                'requestor': pr.get_requestor(),
                 'txid': pr.tx
             }
         path = os.path.join(self.config.path, 'invoices')
@@ -437,4 +437,3 @@ class InvoiceStore(object):
     def sorted_list(self):
         # sort
         return self.invoices.values()
-

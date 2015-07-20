@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Electrum - lightweight Bitcoin client
+# Electrum - lightweight MonetaryUnit client
 # Copyright (C) 2011 thomasv@gitorious
 #
 # This program is free software: you can redistribute it and/or modify
@@ -531,7 +531,7 @@ class Commands:
             PR_PAID: 'Paid',
             PR_EXPIRED: 'Expired',
         }
-        out['amount'] = format_satoshis(out.get('amount')) + ' BTC'
+        out['amount'] = format_satoshis(out.get('amount')) + ' MUE'
         out['status'] = pr_str[out.get('status', PR_UNKNOWN)]
         return out
 
@@ -585,8 +585,8 @@ class Commands:
 
 param_descriptions = {
     'privkey': 'Private key. Type \'?\' to get a prompt.',
-    'destination': 'Bitcoin address, contact or alias',
-    'address': 'Bitcoin address',
+    'destination': 'MonetaryUnit address, contact or alias',
+    'address': 'MonetaryUnit address',
     'seed': 'Seed phrase',
     'txid': 'Transaction ID',
     'pos': 'Position',
@@ -596,13 +596,13 @@ param_descriptions = {
     'pubkey': 'Public key',
     'message': 'Clear text message. Use quotes if it contains spaces.',
     'encrypted': 'Encrypted message',
-    'amount': 'Amount to be sent (in BTC). Type \'!\' to send the maximum available.',
-    'requested_amount': 'Requested amount (in BTC).',
+    'amount': 'Amount to be sent (in MUE). Type \'!\' to send the maximum available.',
+    'requested_amount': 'Requested amount (in MUE).',
     'csv_file': 'CSV file of recipient, amount',
 }
 
 command_options = {
-    'broadcast':   (None, "--broadcast",   "Broadcast the transaction to the Bitcoin network"),
+    'broadcast':   (None, "--broadcast",   "Broadcast the transaction to the MonetaryUnit network"),
     'password':    ("-W", "--password",    "Password"),
     'concealed':   ("-C", "--concealed",   "Don't echo seed to console when restoring"),
     'receiving':   (None, "--receiving",   "Show only receiving addresses"),
@@ -613,7 +613,7 @@ command_options = {
     'show_balance':("-b", "--balance",     "Show the balances of listed addresses"),
     'show_labels': ("-l", "--labels",      "Show the labels of listed addresses"),
     'nocheck':     (None, "--nocheck",     "Do not verify aliases"),
-    'tx_fee':      ("-f", "--fee",         "Transaction fee (in BTC)"),
+    'tx_fee':      ("-f", "--fee",         "Transaction fee (in MUE)"),
     'from_addr':   ("-F", "--from",        "Source address. If it isn't in the wallet, it will ask for the private key unless supplied in the format public_key:private_key. It's not saved in the wallet."),
     'change_addr': ("-c", "--change",      "Change address. Default is a spare address, or the source address if it's not in the wallet"),
     'nbits':       (None, "--nbits",       "Number of bits of entropy"),
@@ -652,10 +652,10 @@ config_variables = {
         'requests_dir': 'directory where a bip70 file will be written.',
         'ssl_privkey': 'Path to your SSL private key, needed to sign the request.',
         'ssl_chain': 'Chain of SSL certificates, needed for signed requests. Put your certificate at the top and the root CA at the end',
-        'url_rewrite': 'Parameters passed to str.replace(), in order to create the r= part of bitcoin: URIs. Example: \"(\'file:///var/www/\',\'https://electrum.org/\')\"',
+        'url_rewrite': 'Parameters passed to str.replace(), in order to create the r= part of monetaryunit: URIs. Example: \"(\'file:///var/www/\',\'https://electrum.org/\')\"',
     },
     'listrequests':{
-        'url_rewrite': 'Parameters passed to str.replace(), in order to create the r= part of bitcoin: URIs. Example: \"(\'file:///var/www/\',\'https://electrum.org/\')\"',
+        'url_rewrite': 'Parameters passed to str.replace(), in order to create the r= part of monetaryunit: URIs. Example: \"(\'file:///var/www/\',\'https://electrum.org/\')\"',
     }
 }
 
@@ -707,7 +707,7 @@ def get_parser(run_gui, run_daemon, run_cmdline):
     subparsers = parser.add_subparsers(dest='cmd', metavar='<command>')
     # gui
     parser_gui = subparsers.add_parser('gui', parents=[parent_parser], description="Run Electrum's Graphical User Interface.", help="Run GUI (default)")
-    parser_gui.add_argument("url", nargs='?', default=None, help="bitcoin URI (or bip70 file)")
+    parser_gui.add_argument("url", nargs='?', default=None, help="monetaryunit URI (or bip70 file)")
     parser_gui.set_defaults(func=run_gui)
     parser_gui.add_argument("-g", "--gui", dest="gui", help="select graphical user interface", choices=['qt', 'lite', 'gtk', 'text', 'stdio', 'jsonrpc'])
     parser_gui.add_argument("-m", action="store_true", dest="hide_gui", default=False, help="hide GUI on startup")
