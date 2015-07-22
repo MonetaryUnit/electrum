@@ -507,12 +507,12 @@ class ElectrumWindow(QMainWindow):
         return self.decimal_point
 
     def base_unit(self):
-        assert self.decimal_point in [2, 5, 8]
+        assert self.decimal_point in [2, 3, 5]
         if self.decimal_point == 2:
             return 'bits'
-        if self.decimal_point == 5:
+        if self.decimal_point == 3:
             return 'mMUE'
-        if self.decimal_point == 8:
+        if self.decimal_point == 5:
             return 'MUE'
         raise Exception('Unknown base unit')
 
@@ -2642,9 +2642,9 @@ class ElectrumWindow(QMainWindow):
             if self.base_unit() == unit_result:
                 return
             if unit_result == 'MUE':
-                self.decimal_point = 8
-            elif unit_result == 'mMUE':
                 self.decimal_point = 5
+            elif unit_result == 'mMUE':
+                self.decimal_point = 3
             elif unit_result == 'bits':
                 self.decimal_point = 2
             else:

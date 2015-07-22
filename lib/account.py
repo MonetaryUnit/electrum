@@ -391,7 +391,7 @@ class Multisig_Account(BIP32_Account):
 
     def pubkeys_to_address(self, pubkeys):
         redeem_script = Transaction.multisig_script(sorted(pubkeys), self.m)
-        address = hash_160_to_bc_address(hash_160(redeem_script.decode('hex')), 5)
+        address = hash_160_to_bc_address(hash_160(redeem_script.decode('hex')), 9)
         return address
 
     def get_address(self, for_change, n):
@@ -402,5 +402,3 @@ class Multisig_Account(BIP32_Account):
 
     def get_type(self):
         return _('Multisig %d of %d'%(self.m, len(self.xpub_list)))
-
-

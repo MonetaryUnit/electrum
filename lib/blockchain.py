@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Electrum - lightweight MonetaryUnit client
+# Electrum - lightweight Bitcoin client
 # Copyright (C) 2012 thomasv@ecdsa.org
 #
 # This program is free software: you can redistribute it and/or modify
@@ -43,6 +43,7 @@ class Blockchain():
         self.print_error("%d blocks" % self.local_height)
 
     def verify_chain(self, chain):
+
         first_header = chain[0]
         prev_header = self.read_header(first_header.get('block_height') -1)
 
@@ -51,20 +52,18 @@ class Blockchain():
             height = header.get('block_height')
 
             prev_hash = self.hash_header(prev_header)
-            bits, target = self.get_target(height/2016, chain)
-            _hash = self.hash_header(header)
+            #bits, target = self.get_target(height/2016, chain)
+            _hash = self.pow_hash_header(header)
             try:
                 assert prev_hash == header.get('prev_block_hash')
-                assert bits == header.get('bits')
-                assert int('0x'+_hash,16) < target
+                #assert bits == header.get('bits')
+                #assert int('0x'+_hash,16) < target
             except Exception:
                 return False
 
             prev_header = header
 
         return True
-
-
 
     def verify_chunk(self, index, hexdata):
         data = hexdata.decode('hex')
@@ -78,22 +77,21 @@ class Blockchain():
             if prev_header is None: raise
             previous_hash = self.hash_header(prev_header)
 
-        bits, target = self.get_target(index)
+        #bits, target = self.get_target(index)
 
         for i in range(num):
             height = index*2016 + i
             raw_header = data[i*80:(i+1)*80]
             header = self.header_from_string(raw_header)
-            _hash = self.hash_header(header)
+            _hash = self.pow_hash_header(header)
             assert previous_hash == header.get('prev_block_hash')
-            assert bits == header.get('bits')
-            assert int('0x'+_hash,16) < target
+            #assert bits == header.get('bits')
+            #assert int('0x'+_hash,16) < target
 
             previous_header = header
-            previous_hash = _hash
+            previous_hash = self.hash_header(header)
 
         self.save_chunk(index, data)
-        self.print_error("validated chunk %d to height %d" % (index, height))
 
 
 
@@ -119,7 +117,10 @@ class Blockchain():
         return h
 
     def hash_header(self, header):
-        return rev_hex(Hash(self.header_to_string(header).decode('hex')).encode('hex'))
+        return rev_hex(Hash9(self.header_to_string(header).decode('hex')).encode('hex'))
+
+    def pow_hash_header(self, header):
+        return rev_hex(Hash9(self.header_to_string(header).decode('hex')).encode('hex'))
 
     def path(self):
         return os.path.join(self.config.path, 'blockchain_headers')
@@ -179,10 +180,14 @@ class Blockchain():
         if chain is None:
             chain = []  # Do not use mutables as default values!
 
-        max_target = 0x00000000FFFF0000000000000000000000000000000000000000000000000000
-        if index == 0: return 0x1d00ffff, max_target
+        max_target = 0x00000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+        if index == 0: return 0x1e0ffff0, 0x00000FFFF0000000000000000000000000000000000000000000000000000000
 
-        first = self.read_header((index-1)*2016)
+        # Viacoin: go back the full period unless it's the first retarget
+        if index == 1:
+            first = self.read_header(0)
+        else:
+            first = self.read_header((index-1)*2016-1)
         last = self.read_header(index*2016-1)
         if last is None:
             for h in chain:
@@ -190,7 +195,7 @@ class Blockchain():
                     last = h
 
         nActualTimespan = last.get('timestamp') - first.get('timestamp')
-        nTargetTimespan = 14*24*60*60
+        nTargetTimespan = 84*60*60
         nActualTimespan = max(nActualTimespan, nTargetTimespan/4)
         nActualTimespan = min(nActualTimespan, nTargetTimespan*4)
 

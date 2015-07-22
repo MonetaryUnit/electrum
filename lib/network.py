@@ -18,7 +18,9 @@ from collections import deque
 DEFAULT_PORTS = {'t':'50001', 's':'50002', 'h':'8081', 'g':'8082'}
 
 DEFAULT_SERVERS = {
-    'localhost':{'t':'5022', 's':'5022'},
+    'electrum1.monetaryunit.org':DEFAULT_PORTS,
+    'electrum2.monetaryunit.org':DEFAULT_PORTS,
+    'electrum3.monetaryunit.org':DEFAULT_PORTS,
 }
 
 NODES_RETRY_INTERVAL = 60

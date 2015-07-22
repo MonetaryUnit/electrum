@@ -153,7 +153,7 @@ class Plugin(BasePlugin):
 
     @hook
     def installwizard_restore(self, wizard, storage):
-        if storage.get('wallet_type') != 'trezor': 
+        if storage.get('wallet_type') != 'trezor':
             return
         seed = wizard.enter_seed_dialog("Enter your Trezor seed", None, func=lambda x:True)
         if not seed:
@@ -320,9 +320,9 @@ class Plugin(BasePlugin):
                 txoutputtype.address = address
             txoutputtype.amount = amount
             addrtype, hash_160 = bc_address_to_hash_160(address)
-            if addrtype == 0:
+            if addrtype == 15:
                 txoutputtype.script_type = types.PAYTOADDRESS
-            elif addrtype == 5:
+            elif addrtype == 9:
                 txoutputtype.script_type = types.PAYTOSCRIPTHASH
             else:
                 raise BaseException('addrtype')
@@ -660,5 +660,5 @@ if TREZOR:
             except ConnectionError:
                 self.bad = True
                 raise
-    
+
             return resp

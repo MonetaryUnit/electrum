@@ -28,6 +28,8 @@ from util import print_error, InvalidPassword
 import ecdsa
 import aes
 
+import quark_hash
+
 ################################## transactions
 
 DUST_THRESHOLD = 546
@@ -140,10 +142,12 @@ def Hash(x):
     if type(x) is unicode: x=x.encode('utf-8')
     return sha256(sha256(x))
 
+Hash9 = lambda x: quark_hash.getPoWHash(x)
 
 hash_encode = lambda x: x[::-1].encode('hex')
 hash_decode = lambda x: x.decode('hex')[::-1]
 hmac_sha_512 = lambda x,y: hmac.new(x, y, hashlib.sha512).digest()
+
 
 def is_new_seed(x, prefix=version.SEED_PREFIX):
     import mnemonic
@@ -358,7 +362,7 @@ def is_address(addr):
         addrtype, h = bc_address_to_hash_160(addr)
     except Exception:
         return False
-    if addrtype not in [12, 9]:
+    if addrtype not in [15, 9]:
         return False
     return addr == hash_160_to_bc_address(h, addrtype)
 
@@ -579,7 +583,7 @@ class EC_KEY(object):
 ###################################### BIP32 ##############################
 
 random_seed = lambda n: "%032x"%ecdsa.util.randrange( pow(2,n) )
-BIP32_PRIME = 0x8000001f
+BIP32_PRIME = 0x80000000
 
 
 def get_pubkeys_from_secret(secret):
@@ -622,7 +626,7 @@ def _CKD_priv(k, c, s, is_prime):
 # This function allows us to find the nth public key, as long as n is
 #  non-negative. If n is negative, we need the master private key to find it.
 def CKD_pub(cK, c, n):
-    if n & BIP32_PRIME: raise
+    #if n & BIP32_PRIME: raise
     return _CKD_pub(cK, c, rev_hex(int_to_hex(n,4)).decode('hex'))
 
 # helper function, callable with arbitrary string
@@ -638,9 +642,8 @@ def _CKD_pub(cK, c, s):
     cK_n = GetPubKey(public_key.pubkey,True)
     return cK_n, c_n
 
-#todo
-BITCOIN_HEADER_PRIV = "0488ade4"
-BITCOIN_HEADER_PUB = "0488b21e"
+BITCOIN_HEADER_PRIV = "4d554550"
+BITCOIN_HEADER_PUB = "4d554553"
 
 TESTNET_HEADER_PRIV = "04358394"
 TESTNET_HEADER_PUB = "043587cf"
@@ -708,7 +711,7 @@ def xpub_from_xprv(xprv, testnet=False):
 def bip32_root(seed, testnet=False):
     import hmac
     header_pub, header_priv = _get_headers(testnet)
-    I = hmac.new("MonetaryUnit seed", seed, hashlib.sha512).digest()
+    I = hmac.new("Bitcoin seed", seed, hashlib.sha512).digest()
     master_k = I[0:32]
     master_c = I[32:]
     K, cK = get_pubkeys_from_secret(master_k)
