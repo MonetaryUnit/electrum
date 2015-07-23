@@ -41,6 +41,8 @@ import bitcoin
 from synchronizer import WalletSynchronizer
 from mnemonic import Mnemonic
 
+import paymentrequest
+
 
 
 # internal ID for imported account
@@ -1226,13 +1228,13 @@ class Abstract_Wallet(object):
         rdir = config.get('requests_dir')
         if rdir:
             key = out.get('id', addr)
-            path = os.path.join(rdir, key + '.bip70')
+            path = os.path.join(rdir, key)
             if os.path.exists(path):
                 baseurl = 'file://' + rdir
                 rewrite = config.get('url_rewrite')
                 if rewrite:
                     baseurl = baseurl.replace(*rewrite)
-                out['request_url'] = os.path.join(baseurl, key + '.bip70')
+                out['request_url'] = os.path.join(baseurl, key)
                 out['URI'] += '&r=' + out['request_url']
                 out['index_url'] = os.path.join(baseurl, 'index.html') + '?id=' + key
         return out
@@ -1242,8 +1244,12 @@ class Abstract_Wallet(object):
         r = self.receive_requests[key]
         address = r['address']
         amount = r.get('amount')
-        timestamp = r.get('timestamp', 0)
-        expiration = r.get('expiration')
+        timestamp = r.get('time', 0)
+        if timestamp and type(timestamp) != int:
+            timestamp = 0
+        expiration = r.get('exp')
+        if expiration and type(expiration) != int:
+            expiration = 0
         if amount:
             if self.up_to_date:
                 paid = amount <= self.get_addr_received(address)
@@ -1259,11 +1265,21 @@ class Abstract_Wallet(object):
     def make_payment_request(self, addr, amount, message, expiration):
         timestamp = int(time.time())
         _id = Hash(addr + "%d"%timestamp).encode('hex')[0:10]
-        r = {'timestamp':timestamp, 'amount':amount, 'expiration':expiration, 'address':addr, 'memo':message, 'id':_id}
+        r = {'time':timestamp, 'amount':amount, 'exp':expiration, 'address':addr, 'memo':message, 'id':_id}
         return r
 
+    def sign_payment_request(self, key, alias, alias_addr, password):
+        req = self.receive_requests.get(key)
+        alias_privkey = self.get_private_key(alias_addr, password)[0]
+        pr = paymentrequest.make_unsigned_request(req)
+        paymentrequest.sign_request_with_alias(pr, alias, alias_privkey)
+        req['name'] = pr.pki_data
+        req['sig'] = pr.signature.encode('hex')
+        self.receive_requests[key] = req
+        self.storage.put('payment_requests', self.receive_requests)
+
     def add_payment_request(self, req, config):
-        import paymentrequest, shutil, os
+        import shutil, os
         addr = req['address']
         amount = req.get('amount')
         message = req.get('memo')
@@ -1280,8 +1296,8 @@ class Abstract_Wallet(object):
                 src = os.path.join(os.path.dirname(__file__), 'www', 'index.html')
                 shutil.copy(src, index)
             key = req.get('id', addr)
-            pr, requestor = paymentrequest.make_request(config, req)
-            path = os.path.join(rdir, key + '.bip70')
+            pr = paymentrequest.make_request(config, req)
+            path = os.path.join(rdir, key)
             with open(path, 'w') as f:
                 f.write(pr.SerializeToString())
             # reload
@@ -1297,7 +1313,7 @@ class Abstract_Wallet(object):
         rdir = config.get('requests_dir')
         if rdir:
             key = r.get('id', addr)
-            for s in ['.json', '.bip70']:
+            for s in ['.json', '']:
                 n = os.path.join(rdir, key + s)
                 if os.path.exists(n):
                     os.unlink(n)
@@ -1305,7 +1321,7 @@ class Abstract_Wallet(object):
         return True
 
     def get_sorted_requests(self, config):
-        return sorted(map(lambda x: self.get_payment_request(x, config), self.receive_requests.keys()), key=itemgetter('timestamp'))
+        return sorted(map(lambda x: self.get_payment_request(x, config), self.receive_requests.keys()), key=lambda x: x.get('time', 0))
 
 
 

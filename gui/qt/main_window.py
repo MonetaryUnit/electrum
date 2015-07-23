@@ -621,7 +621,11 @@ class ElectrumWindow(QMainWindow):
         self.expires_combo = QComboBox()
         self.expires_combo.addItems(map(lambda x:x[0], expiration_values))
         self.expires_combo.setCurrentIndex(1)
-        msg = _('Expiration date of your request. This information is not included in the MonetaryUnit address nor in the QR code; the recipient will see it only if you send them a complete request.')
+        msg = ' '.join([
+            _('Expiration date of your request.'),
+            _('This information is seen by the recipient if you send them a signed payment request.'),
+            _('Expired requests have to be deleted manually from your list, in order to free the corresponding MonetaryUnit addresses'),
+        ])
         grid.addWidget(HelpLabel(_('Expires in'), msg), 3, 0)
         grid.addWidget(self.expires_combo, 3, 1)
         self.expires_label = QLineEdit('')
@@ -681,7 +685,7 @@ class ElectrumWindow(QMainWindow):
             return
         addr = str(item.text(2))
         req = self.wallet.receive_requests[addr]
-        expires = _('Never') if req.get('expiration') is None else util.age(req['timestamp'] + req['expiration'])
+        expires = util.age(req['time'] + req['exp']) if req.get('exp') else _('Never')
         amount = req['amount']
         message = self.wallet.labels.get(addr, '')
         self.receive_address_e.setText(addr)
@@ -703,14 +707,14 @@ class ElectrumWindow(QMainWindow):
         message = self.wallet.labels.get(addr, '')
         amount = req['amount']
         URI = util.create_URI(addr, amount, message)
-        if req.get('id') and req.get('sig'):
+        if req.get('time'):
+            URI += "&time=%d"%req.get('time')
+        if req.get('exp'):
+            URI += "&exp=%d"%req.get('exp')
+        if req.get('name') and req.get('sig'):
             sig = req.get('sig').decode('hex')
             sig = bitcoin.base_encode(sig, base=58)
-            URI += "&id=" + req['id'] + "&sig="+sig
-            if req.get('timestamp'):
-                URI += "&timestamp=%d"%req.get('timestamp')
-            if req.get('expiration'):
-                URI += "&expiration=%d"%req.get('expiration')
+            URI += "&name=" + req['name'] + "&sig="+sig
         return str(URI)
 
     def receive_list_menu(self, position):
@@ -726,7 +730,6 @@ class ElectrumWindow(QMainWindow):
         menu.exec_(self.receive_list.viewport().mapToGlobal(position))
 
     def sign_payment_request(self, addr):
-        req = self.wallet.receive_requests.get(addr)
         alias = self.config.get('alias')
         alias_privkey = None
         if alias and self.alias_info:
@@ -737,20 +740,14 @@ class ElectrumWindow(QMainWindow):
                     password = self.password_dialog(msg)
                     if password:
                         try:
-                            alias_privkey = self.wallet.get_private_key(alias_addr, password)[0]
+                            self.wallet.sign_payment_request(addr, alias, alias_addr, password)
                         except Exception as e:
-                            QMessageBox.warning(parent, _('Error'), str(e), _('OK'))
+                            QMessageBox.warning(self, _('Error'), str(e), _('OK'))
                             return
                     else:
                         return
                 else:
-                    if not self.question(_('This request will not be signed; the MonetaryUnit address returned by your alias does not belong to your wallet')):
-                        return
-        pr, requestor = paymentrequest.make_request(self.config, req, alias, alias_privkey)
-        if requestor:
-            req['id'] = requestor
-            req['sig'] = pr.signature.encode('hex')
-        self.wallet.add_payment_request(req, self.config)
+                    return
 
     def save_payment_request(self):
         addr = str(self.receive_address_e.text())
@@ -871,14 +868,14 @@ class ElectrumWindow(QMainWindow):
             address = req['address']
             if address not in domain:
                 continue
-            timestamp = req['timestamp']
+            timestamp = req.get('time', 0)
             amount = req.get('amount')
-            expiration = req.get('expiration', None)
+            expiration = req.get('exp', None)
             message = req.get('memo', '')
             date = format_time(timestamp)
             status = req.get('status')
             signature = req.get('sig')
-            requestor = req.get('id', '')
+            requestor = req.get('name', '')
             amount_str = self.format_amount(amount) if amount else ""
             account = ''
             item = QTreeWidgetItem([date, account, address, '', message, amount_str, pr_tooltips.get(status,'')])
@@ -888,7 +885,6 @@ class ElectrumWindow(QMainWindow):
             if status is not PR_UNKNOWN:
                 item.setIcon(6, QIcon(pr_icons.get(status)))
             self.receive_list.addTopLevelItem(item)
-
 
     def update_receive_qr(self):
         addr = str(self.receive_address_e.text())
@@ -1343,16 +1339,16 @@ class ElectrumWindow(QMainWindow):
         try:
             out = util.parse_URI(unicode(URI))
         except Exception as e:
-            QMessageBox.warning(self, _('Error'), _('Invalid bitcoin URI:') + '\n' + str(e), _('OK'))
+            QMessageBox.warning(self, _('Error'), _('Invalid monetaryunit URI:') + '\n' + str(e), _('OK'))
             return
         self.tabs.setCurrentIndex(1)
 
         r = out.get('r')
         sig = out.get('sig')
-        _id = out.get('id')
-        if r or (_id and sig):
+        name = out.get('name')
+        if r or (name and sig):
             def get_payment_request_thread():
-                if _id and sig:
+                if name and sig:
                     from electrum import paymentrequest
                     pr = paymentrequest.serialize_request(out).SerializeToString()
                     self.payment_request = paymentrequest.PaymentRequest(pr)
@@ -1435,7 +1431,8 @@ class ElectrumWindow(QMainWindow):
             key = pr.get_id()
             status = self.invoices.get_status(key)
             requestor = pr.get_requestor()
-            date_str = util.format_time(pr.get_expiration_date())
+            exp = pr.get_expiration_date()
+            date_str = util.format_time(exp) if exp else _('Never')
             item = QTreeWidgetItem( [ date_str, requestor, pr.memo, self.format_amount(pr.get_amount(), whitespaces=True), pr_tooltips.get(status,'')] )
             item.setIcon(4, QIcon(pr_icons.get(status)))
             item.setData(0, Qt.UserRole, key)
