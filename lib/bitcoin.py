@@ -642,14 +642,24 @@ def _CKD_pub(cK, c, s):
     cK_n = GetPubKey(public_key.pubkey,True)
     return cK_n, c_n
 
-BITCOIN_HEADER_PRIV = "4d554550"
-BITCOIN_HEADER_PUB = "4d554553"
+
+# there are mue keys created before we had a unique header
+MUE_HEADER_PRIV = "4d554550"
+MUE_HEADER_PUB = "4d554553"
+
+BITCOIN_HEADER_PRIV = "0488ade4"
+BITCOIN_HEADER_PUB = "0488b21e"
 
 TESTNET_HEADER_PRIV = "04358394"
 TESTNET_HEADER_PUB = "043587cf"
 
+MUE_HEADERS = (MUE_HEADER_PUB, MUE_HEADER_PRIV)
+
 BITCOIN_HEADERS = (BITCOIN_HEADER_PUB, BITCOIN_HEADER_PRIV)
 TESTNET_HEADERS = (TESTNET_HEADER_PUB, TESTNET_HEADER_PRIV)
+
+#todo
+ALL_HEADERS = (BITCOIN_HEADER_PUB, BITCOIN_HEADER_PRIV, MUE_HEADER_PUB, MUE_HEADER_PRIV)
 
 def _get_headers(testnet):
     """Returns the correct headers for either testnet or bitcoin, in the form
@@ -657,7 +667,7 @@ def _get_headers(testnet):
     if testnet:
         return TESTNET_HEADERS
     else:
-        return BITCOIN_HEADERS
+        return MUE_HEADERS
 
 
 def deserialize_xkey(xkey):
@@ -671,6 +681,8 @@ def deserialize_xkey(xkey):
         head = TESTNET_HEADER_PRIV
     elif xkey_header in BITCOIN_HEADERS:
         head = BITCOIN_HEADER_PRIV
+    elif xkey_header in MUE_HEADERS:
+        head = MUE_HEADER_PRIV
     else:
         raise Exception("Unknown xkey header: '%s'" % xkey_header)
 
